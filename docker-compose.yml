@@ -6,28 +6,31 @@ services:
     ports:
       - '5672:5672'
     healthcheck:
-      test: [ "CMD", "nc", "-z", "rabbitmq", "5672" ]
+      test: [ "CMD", "rabbitmqctl", "status" ]
       interval: 5s
       timeout: 15s
-      retries: 1
+      retries: 10
   receiver1:
-    restart: on-failure
     build: ./receiver
+    container_name: 'receiver1'
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     environment: 
       - TOPIC=iman
   receiver2:
-    restart: on-failure
     build: ./receiver
+    container_name: 'receiver2'
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     environment: 
       - TOPIC=iman
   sender:
-    restart: on-failure
     build: ./sender
+    container_name: 'sender'
     depends_on:
-      - rabbitmq
+      rabbitmq:
+        condition: service_healthy
     ports:
       - '3000:3000'

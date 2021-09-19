@@ -1,36 +1,29 @@
-const amqp = require('amqplib/callback_api');
+const amqp = require('amqplib');
 
 const topic = process.env.TOPIC || 'iman';
+const EXCHANGE = 'ImanMessenger';
 
-amqp.connect('amqp://rabbitmq', (error0, connection) => {
-  if (error0) throw error0;
-
-  connection.createChannel((error1, channel) => {
-    if (error1) throw error1;
-
-    const exchange = 'ImanMessenger';
-
-    channel.assertExchange(exchange, 'direct', { durable: false });
-
-    channel.assertQueue('', { exclusive: true }, (error2, q) => {
-      if (error2) throw error2;
+const connect = async () => {
+  const connection = await amqp.connect('amqp://rabbitmq');
+  const channel = await connection.createChannel();
+  await channel.assertExchange(EXCHANGE, 'direct', { durable: false });
+  const q = await channel.assertQueue('', { exclusive: true });
+  console.log(
+    ' [*] Waiting for messages in %s. To exit press CTRL+C',
+    q.queue,
+  );
+  await channel.bindQueue(q.queue, EXCHANGE, topic);
+  channel.consume(
+    q.queue,
+    (msg) => {
       console.log(
-        ' [*] Waiting for messages in %s. To exit press CTRL+C',
-        q.queue,
+        " [x] %s: '%s'",
+        msg.fields.routingKey,
+        msg.content.toString(),
       );
-      channel.bindQueue(q.queue, exchange, topic);
+    },
+    { noAck: true },
+  );
+};
 
-      channel.consume(
-        q.queue,
-        (msg) => {
-          console.log(
-            " [x] %s: '%s'",
-            msg.fields.routingKey,
-            msg.content.toString(),
-          );
-        },
-        { noAck: true },
-      );
-    });
-  });
-});
+connect();
