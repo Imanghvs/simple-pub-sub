@@ -1,13 +1,8 @@
 const amqp = require('amqplib/callback_api');
 
-const args = process.argv.slice(2);
+const topic = process.env.TOPIC || 'iman';
 
-if (args.length === 0) {
-  console.log('At least one name is required.');
-  process.exit(-1);
-}
-
-amqp.connect('amqp://localhost', (error0, connection) => {
+amqp.connect('amqp://rabbitmq', (error0, connection) => {
   if (error0) throw error0;
 
   connection.createChannel((error1, channel) => {
@@ -23,9 +18,7 @@ amqp.connect('amqp://localhost', (error0, connection) => {
         ' [*] Waiting for messages in %s. To exit press CTRL+C',
         q.queue,
       );
-      args.forEach((arg) => {
-        channel.bindQueue(q.queue, exchange, arg);
-      });
+      channel.bindQueue(q.queue, exchange, topic);
 
       channel.consume(
         q.queue,

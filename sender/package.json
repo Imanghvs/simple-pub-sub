@@ -1,5 +1,5 @@
 {
-  "name": "simple-pub-sub",
+  "name": "simple-publisher",
   "version": "1.0.0",
   "main": "receive.js",
   "license": "MIT",

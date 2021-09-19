@@ -1,16 +1,33 @@
 version: "3.8"
 services:
   rabbitmq:
-    image: rabbitmq:3.8-management-alpine
+    image: rabbitmq:3.8
     container_name: 'rabbitmq'
     ports:
-        - 5672:5672
-        - 15672:15672
-  app:
-    restart: always
-    build: ./
+      - '5672:5672'
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "rabbitmq", "5672" ]
+      interval: 5s
+      timeout: 15s
+      retries: 1
+  receiver1:
+    restart: on-failure
+    build: ./receiver
     depends_on:
       - rabbitmq
-    command: sh -c "yarn install && node index.js"
+    environment: 
+      - TOPIC=iman
+  receiver2:
+    restart: on-failure
+    build: ./receiver
+    depends_on:
+      - rabbitmq
+    environment: 
+      - TOPIC=iman
+  sender:
+    restart: on-failure
+    build: ./sender
+    depends_on:
+      - rabbitmq
     ports:
       - '3000:3000'
