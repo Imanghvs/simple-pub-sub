@@ -1,10 +1,11 @@
 version: "3.8"
 services:
   rabbitmq:
-    image: rabbitmq:3.8
+    image: rabbitmq:3.8-management
     container_name: 'rabbitmq'
     ports:
       - '5672:5672'
+      - '15672:15672'
     healthcheck:
       test: [ "CMD", "rabbitmqctl", "status" ]
       interval: 5s
@@ -17,7 +18,7 @@ services:
       rabbitmq:
         condition: service_healthy
     environment: 
-      - TOPIC=iman
+      - KEY=*.iman
   receiver2:
     build: ./receiver
     container_name: 'receiver2'
@@ -25,7 +26,7 @@ services:
       rabbitmq:
         condition: service_healthy
     environment: 
-      - TOPIC=iman
+      - KEY=customer.*
   sender:
     build: ./sender
     container_name: 'sender'

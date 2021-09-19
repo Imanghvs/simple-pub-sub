@@ -11,19 +11,18 @@ app.use(express.json());
 const connect = async () => {
   const connection = await amqp.connect('amqp://rabbitmq');
   const channel = await connection.createChannel();
-  await channel.assertExchange(EXCHANGE, 'direct', { durable: false });
+  await channel.assertExchange(EXCHANGE, 'topic', { durable: false });
   return channel;
 };
 
 const setupServer = async () => {
   const channel = await connect();
-  app.post('/:topic/', async (req, res) => {
-    const { topic } = req.params;
+  app.post('/:key/', async (req, res) => {
+    const { key } = req.params;
     const { message } = req.body;
-    channel.assertExchange(EXCHANGE, 'direct', { durable: false });
-    channel.publish(EXCHANGE, topic, Buffer.from(message));
+    channel.publish(EXCHANGE, key, Buffer.from(message));
     console.log(' [x] Sent %s', message);
-    res.send(`message "${message}" sent to ${topic}`);
+    res.send(`message "${message}" sent to ${key}`);
   });
   app.listen(port, () => {
     console.log(`Example app listening at http://localhost:${port}`);
